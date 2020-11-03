@@ -7,6 +7,13 @@ Key Encapsulation Mechanism (KEM) [BIKE](https://bikesuite.org).
 It was developed and is maintained by Nir Drucker, Shay Gueron, and Dusan Kostic,
 (drucker.nir@gmail.com, shay.gueron@gmail.com, dkostic@protonmail.com).
 
+This git branch of the repository contains the implementation of BIKE Level-5
+in addition to levels 1 and 3. Level 5 implementation is added in this separate
+branch to avoid increasing code complexity in the master branch. The increased
+complexity of Level-5 implementation stems from the size of level 5 parameters
+which require a slightly different (and less efficient) implementation of the
+polynomial inversion functions. 
+
 BIKE is a submission to the 
 [Post-Quantum Cryptography Standardization project](http://csrc.nist.gov/projects/post-quantum-cryptography).
 
@@ -85,7 +92,7 @@ cmake -DCMAKE_BUILD_TYPE=Release ..
 make
 ```
 
-Default is Level-1 (64-bit quantum security) with AVX2 support.
+Default is Level-5 (64-bit quantum security) with AVX2 support.
 This compilation assumes that AES_NI and POPCNT instructions are available. 
 For platforms that do not have AES_NI use USE_OPENSSL=1.
 
