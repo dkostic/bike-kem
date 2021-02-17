@@ -21,6 +21,12 @@
 #include "decode.h"
 #include "utilities.h"
 
+// TODO: add comment
+#define AVX2_INTERNAL
+#include "x86_64_intrinsic.h"
+
+#include "decode_common.c"
+
 #define R_YMM_HALF_LOG2 UPTOPOW2(R_YMM / 2)
 
 _INLINE_ void
@@ -89,12 +95,32 @@ rotate256_small(OUT syndrome_t *out, IN const syndrome_t *in, size_t count)
   }
 }
 
-void rotate_right(OUT syndrome_t *out,
-                  IN const syndrome_t *in,
-                  IN const uint32_t    bitscount)
+void rotate_right_avx2(OUT syndrome_t *out,
+                       IN const syndrome_t *in,
+                       IN const uint32_t    bitscount)
 {
   // 1) Rotate in granularity of 256 bits blocks, using YMMs
   rotate256_big(out, in, (bitscount / BITS_IN_YMM));
   // 2) Rotate in smaller granularity (less than 256 bits), using YMMs
   rotate256_small(out, out, (bitscount % BITS_IN_YMM));
 }
+
+// TODO: add comment
+
+void dup_avx2(IN OUT syndrome_t *s)
+{
+  _dup(s);
+}
+
+void bit_sliced_adder_avx2(OUT upc_t *upc,
+                                IN OUT syndrome_t *rotated_syndrome,
+                                IN const size_t    num_of_slices)
+{
+  _bit_sliced_adder(upc, rotated_syndrome, num_of_slices);
+}
+
+void bit_slice_full_subtract_avx2(OUT upc_t *upc, IN uint8_t val)
+{
+  _bit_slice_full_subtract(upc, val);
+}
+

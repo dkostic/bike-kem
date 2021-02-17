@@ -10,7 +10,22 @@
 // For memset
 #include <string.h>
 
+#include "cpuid.h"
 #include "types.h"
+
+#define SELECT_FUNC(func_name, ...)    \
+  if(is_avx512_enabled()) {            \
+    func_name##_avx512(__VA_ARGS__);   \
+  } else if(is_avx2_enabled()) {       \
+    func_name##_avx2(__VA_ARGS__);     \
+  } else {                             \
+    func_name##_portable(__VA_ARGS__); \
+  }
+
+#define EXPAND_FUNC_DECL(func_name, ...) \
+  void func_name##_avx2(__VA_ARGS__);    \
+  void func_name##_avx512(__VA_ARGS__);    \
+  void func_name##_portable(__VA_ARGS__);
 
 #define ROTR64(x, s) (((x) >> (s)) | (x) << (64 - (s)))
 

@@ -13,6 +13,7 @@
 #include "cleanup.h"
 #include "gf2x.h"
 #include "gf2x_internal.h"
+#include "utilities.h"
 
 // c = a^2^2^num_sqrs
 _INLINE_ void repeated_squaring(OUT pad_r_t *c,

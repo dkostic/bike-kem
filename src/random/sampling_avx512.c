@@ -7,16 +7,20 @@
 
 #include <assert.h>
 
-#include "sampling.h"
+#include "sampling_internal.h"
+
+// TODO: add comment
+#define AVX512_INTERNAL
+#include "x86_64_intrinsic.h"
 
 // For improved performance, we process NUM_ZMMS amount of data in parallel.
 #define NUM_ZMMS    (8)
 #define ZMMS_QWORDS (QWORDS_IN_ZMM * NUM_ZMMS)
 
-void secure_set_bits(OUT pad_r_t *   r,
-                     IN const size_t first_pos,
-                     IN const idx_t *wlist,
-                     IN const size_t w_size)
+void secure_set_bits_avx512(OUT pad_r_t *   r,
+                            IN const size_t first_pos,
+                            IN const idx_t *wlist,
+                            IN const size_t w_size)
 {
   // The function assumes that the size of r is a multiple
   // of the cumulative size of used ZMM registers.

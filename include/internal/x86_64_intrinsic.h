@@ -11,8 +11,6 @@
 //   - I16 denotes 16-bit wide integers,
 //   - U64 denotes 64-bit wide unsigned integers.
 
-#pragma once
-
 #if !defined(X86_64)
 #  error "This file can be included only on X86_64 architectures."
 #endif
@@ -23,31 +21,20 @@
 // PORTABLE, AVX2, AVX512 implementations. Based on the implementation,
 // we define macros for the different data types (uint64_t, __m256i, __m512i),
 // and all the required operations (LOAD, STORE, >>, <<) on these types.
-#if defined(AVX2)
+// TODO: handle the above comment
 
-#  define REG_T __m256i
+// The rest of the SIMD macros that are
+// required for AVX2 and AVX512 implementation.
+#if defined(AVX2_INTERNAL)
+
+#  define REG_T      __m256i
+#  define REG_QWORDS (4)
 
 #  define LOAD(mem)       _mm256_loadu_si256((const void *)(mem))
 #  define STORE(mem, reg) _mm256_storeu_si256((void *)(mem), (reg))
 
 #  define SLLI_I64(a, imm) _mm256_slli_epi64(a, imm)
 #  define SRLI_I64(a, imm) _mm256_srli_epi64(a, imm)
-
-#elif defined(AVX512)
-
-#  define REG_T __m512i
-
-#  define LOAD(mem)       _mm512_loadu_si512((mem))
-#  define STORE(mem, reg) _mm512_storeu_si512((mem), (reg))
-
-#  define SLLI_I64(a, imm) _mm512_slli_epi64(a, imm)
-#  define SRLI_I64(a, imm) _mm512_srli_epi64(a, imm)
-
-#endif
-
-// The rest of the SIMD macros that are
-// required for AVX2 and AVX512 implementation.
-#if defined(AVX2)
 
 #  define SET_I8(...)  _mm256_set_epi8(__VA_ARGS__)
 #  define SET_I32(...) _mm256_set_epi32(__VA_ARGS__)
@@ -78,7 +65,16 @@
 
 #  define MOVEMASK(a) _mm256_movemask_epi8(a)
 
-#elif defined(AVX512)
+#elif defined(AVX512_INTERNAL)
+
+#  define REG_T      __m512i
+#  define REG_QWORDS (8)
+
+#  define LOAD(mem)       _mm512_loadu_si512((mem))
+#  define STORE(mem, reg) _mm512_storeu_si512((mem), (reg))
+
+#  define SLLI_I64(a, imm) _mm512_slli_epi64(a, imm)
+#  define SRLI_I64(a, imm) _mm512_srli_epi64(a, imm)
 
 #  define MSTORE(mem, mask, reg) _mm512_mask_store_epi64((mem), (mask), (reg))
 
@@ -106,5 +102,16 @@
 #  define PERMX_I64(a, imm)        _mm512_permutex_epi64(a, imm)
 #  define PERMX2VAR_I64(a, idx, b) _mm512_permutex2var_epi64(a, idx, b)
 #  define PERMXVAR_I64(idx, a)     _mm512_permutexvar_epi64(idx, a)
+
+#else
+
+#  define REG_T      uint64_t
+#  define REG_QWORDS (1)
+
+#  define LOAD(mem)       (mem)[0]
+#  define STORE(mem, val) (mem)[0] = val
+
+#  define SLLI_I64(a, imm) ((a) << (imm))
+#  define SRLI_I64(a, imm) ((a) >> (imm))
 
 #endif

@@ -7,14 +7,15 @@
 
 #include <assert.h>
 
-#include "sampling.h"
+#include "sampling_internal.h"
+#include "utilities.h"
 
 #define MAX_WLIST_SIZE (T > D ? T : D)
 
-void secure_set_bits(OUT pad_r_t *   r,
-                     IN const size_t first_pos,
-                     IN const idx_t *wlist,
-                     IN const size_t w_size)
+void secure_set_bits_portable(OUT pad_r_t *   r,
+                              IN const size_t first_pos,
+                              IN const idx_t *wlist,
+                              IN const size_t w_size)
 {
   assert(w_size <= MAX_WLIST_SIZE);
 

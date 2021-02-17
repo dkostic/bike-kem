@@ -17,8 +17,13 @@
  *     e5089. https://doi.org/10.1002/cpe.5089.
  */
 
-#include "decode.h"
 #include "utilities.h"
+
+// TODO: add comment
+#define AVX512_INTERNAL
+#include "x86_64_intrinsic.h"
+
+#include "decode_common.c"
 
 #define R_ZMM_HALF_LOG2 UPTOPOW2(R_ZMM / 2)
 
@@ -83,12 +88,29 @@ rotate512_small(OUT syndrome_t *out, IN const syndrome_t *in, size_t bitscount)
   }
 }
 
-void rotate_right(OUT syndrome_t *out,
-                  IN const syndrome_t *in,
-                  IN const uint32_t    bitscount)
+void rotate_right_avx512(OUT syndrome_t *out,
+                         IN const syndrome_t *in,
+                         IN const uint32_t    bitscount)
 {
   // 1) Rotate in granularity of 512 bits blocks, using ZMMs
   rotate512_big(out, in, (bitscount / BITS_IN_ZMM));
   // 2) Rotate in smaller granularity (less than 512 bits), using ZMMs
   rotate512_small(out, out, (bitscount % BITS_IN_ZMM));
+}
+
+void dup_avx512(IN OUT syndrome_t *s)
+{
+  _dup(s);
+}
+
+void bit_sliced_adder_avx512(OUT upc_t *upc,
+                           IN OUT syndrome_t *rotated_syndrome,
+                           IN const size_t    num_of_slices)
+{
+  _bit_sliced_adder(upc, rotated_syndrome, num_of_slices);
+}
+
+void bit_slice_full_subtract_avx512(OUT upc_t *upc, IN uint8_t val)
+{
+  _bit_slice_full_subtract(upc, val);
 }

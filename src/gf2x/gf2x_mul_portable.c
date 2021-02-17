@@ -7,6 +7,7 @@
 
 #include "gf2x_internal.h"
 #include "utilities.h"
+#include "x86_64_intrinsic.h"
 
 #define LSB3(x) ((x)&7)
 
@@ -16,7 +17,9 @@
 // multiplication in GF (2)[x]". In: International Algorithmic Number Theory
 // Symposium (pp. 153-166). Springer, Berlin, Heidelberg. In this implementation,
 // the last three bits are multiplied using a schoolbook multiplication.
-void gf2x_mul_base(OUT uint64_t *c, IN const uint64_t *a, IN const uint64_t *b)
+void gf2x_mul_base_portable(OUT uint64_t *c,
+                            IN const uint64_t *a,
+                            IN const uint64_t *b)
 {
   uint64_t       h = 0, l = 0, g1, g2, u[8];
   const uint64_t w  = 64;
@@ -64,12 +67,12 @@ void gf2x_mul_base(OUT uint64_t *c, IN const uint64_t *a, IN const uint64_t *b)
 }
 
 // c = a^2
-void gf2x_sqr(OUT dbl_pad_r_t *c, IN const pad_r_t *a)
+void gf2x_sqr_portable(OUT dbl_pad_r_t *c, IN const pad_r_t *a)
 {
   const uint64_t *a64 = (const uint64_t *)a;
   uint64_t *      c64 = (uint64_t *)c;
 
   for(size_t i = 0; i < R_QWORDS; i++) {
-    gf2x_mul_base(&c64[2 * i], &a64[i], &a64[i]);
+    gf2x_mul_base_portable(&c64[2 * i], &a64[i], &a64[i]);
   }
 }

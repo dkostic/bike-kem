@@ -10,8 +10,16 @@
  * 2020. https://eprint.iacr.org/2020/298.pdf
  */
 
+#include <assert.h>
+
 #include "cleanup.h"
 #include "gf2x_internal.h"
+
+// TODO: add comment
+#define AVX512_INTERNAL
+#include "x86_64_intrinsic.h"
+
+#include "gf2x_helper_common.c"
 
 #define NUM_ZMMS    (2)
 #define NUM_OF_VALS (NUM_ZMMS * WORDS_IN_ZMM)
@@ -103,7 +111,9 @@ _INLINE_ void bin_to_bytes(OUT uint8_t *bytes_buf, IN const pad_r_t *bin_buf)
 // For improved performance, we compute the result by inverted permutation pi1:
 //     pi1 : (j * 2^-k) % r --> j.
 // Input argument l_param is defined as the value (2^-k) % r.
-void k_squaring(OUT pad_r_t *c, IN const pad_r_t *a, IN const size_t l_param)
+void k_squaring_avx512(OUT pad_r_t *c,
+                       IN const pad_r_t *a,
+                       IN const size_t   l_param)
 {
   ALIGN(ALIGN_BYTES) uint16_t map[R_PADDED];
   ALIGN(ALIGN_BYTES) uint8_t  a_bytes[R_PADDED];
@@ -123,4 +133,40 @@ void k_squaring(OUT pad_r_t *c, IN const pad_r_t *a, IN const size_t l_param)
 
   secure_clean(a_bytes, sizeof(a_bytes));
   secure_clean(c_bytes, sizeof(c_bytes));
+}
+
+// TODO: add comment
+void karatzuba_add1_avx512(OUT uint64_t *alah,
+                         OUT uint64_t *blbh,
+                         IN const uint64_t *a,
+                         IN const uint64_t *b,
+                         IN const size_t    qwords_len)
+{
+  _karatzuba_add1(alah, blbh, a, b, qwords_len);
+}
+
+void karatzuba_add2_avx512(OUT uint64_t *z,
+                         IN const uint64_t *x,
+                         IN const uint64_t *y,
+                         IN const size_t    qwords_len)
+{
+  _karatzuba_add2(z, x, y, qwords_len);
+}
+
+void karatzuba_add3_avx512(OUT uint64_t *c,
+                         IN const uint64_t *mid,
+                         IN const size_t    qwords_len)
+{
+  _karatzuba_add3(c, mid, qwords_len);
+}
+
+// c = a mod (x^r - 1)
+void gf2x_red_avx512(OUT pad_r_t *c, IN const dbl_pad_r_t *a)
+{
+  _gf2x_red(c, a);
+}
+
+void gf2x_mod_add_avx512(OUT pad_r_t *c, IN const pad_r_t *a, IN const pad_r_t *b)
+{
+  _gf2x_mod_add(c, a, b);
 }

@@ -91,38 +91,30 @@ if(PORTABLE)
   if(AVX2)
     message(FATAL "AVX2 flag is not allowed when PORTABLE is selected")
   endif()
-  
+
   if(AVX512)
     message(FATAL "AVX512 flag is not allowed when PORTABLE is selected")
   endif()
-  
+
   if(PCLMUL)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mpclmul -DPCLMUL")
-    set(SUFMUL _pclmul)
-  else()
-    set(SUFMUL _portable)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DPCLMUL")
   endif()
 
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DPORTABLE")
-  set(SUF _portable)
 
 else()
 
   if(VPCLMUL)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mvpclmulqdq -DVPCLMUL")
-    set(SUFMUL _vpclmul)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DVPCLMUL")
     set(AVX512 1)
   else()
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mpclmul -DPCLMUL")
-    set(SUFMUL _pclmul)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DPCLMUL")
   endif()
 
   if(AVX512)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx512f -mavx512bw -mavx512dq -DAVX512")
-    set(SUF _avx512)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DAVX512")
   else()
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx2 -DAVX2")
-    set(SUF _avx2)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DAVX2")
   endif()
 endif()
 
@@ -138,3 +130,15 @@ if(USE_NIST_RAND)
   set(LINK_OPENSSL 1)
 
 endif()
+
+set_source_files_properties(${PROJECT_SOURCE_DIR}/src/decode/decode_avx2.c PROPERTIES COMPILE_OPTIONS "-mavx2")
+set_source_files_properties(${PROJECT_SOURCE_DIR}/src/decode/decode_avx512.c PROPERTIES COMPILE_OPTIONS "-mavx512f;-mavx512bw;-mavx512dq")
+
+set_source_files_properties(${PROJECT_SOURCE_DIR}/src/gf2x/gf2x_helper_avx2.c PROPERTIES COMPILE_OPTIONS "-mavx2")
+set_source_files_properties(${PROJECT_SOURCE_DIR}/src/gf2x/gf2x_helper_avx512.c PROPERTIES COMPILE_OPTIONS "-mavx512f;-mavx512bw;-mavx512dq")
+
+set_source_files_properties(${PROJECT_SOURCE_DIR}/src/random/sampling_avx2.c PROPERTIES COMPILE_OPTIONS "-mavx2")
+set_source_files_properties(${PROJECT_SOURCE_DIR}/src/random/sampling_avx512.c PROPERTIES COMPILE_OPTIONS "-mavx512f;-mavx512bw;-mavx512dq")
+
+set_source_files_properties(${PROJECT_SOURCE_DIR}/src/gf2x/gf2x_mul_pclmul.c PROPERTIES COMPILE_OPTIONS "-mpclmul")
+set_source_files_properties(${PROJECT_SOURCE_DIR}/src/gf2x/gf2x_mul_vpclmul.c PROPERTIES COMPILE_OPTIONS "-mavx512f;-mavx512bw;-mavx512dq;-mvpclmulqdq")

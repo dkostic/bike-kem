@@ -8,6 +8,8 @@
 #include "decode.h"
 #include "utilities.h"
 
+#include "decode_common.c"
+
 #define R_QWORDS_HALF_LOG2 UPTOPOW2(R_QWORDS / 2)
 
 _INLINE_ void
@@ -51,12 +53,29 @@ rotr_small(OUT syndrome_t *out, IN const syndrome_t *in, IN const size_t bits)
   }
 }
 
-void rotate_right(OUT syndrome_t *out,
-                  IN const syndrome_t *in,
-                  IN const uint32_t    bitscount)
+void rotate_right_portable(OUT syndrome_t *out,
+                           IN const syndrome_t *in,
+                           IN const uint32_t    bitscount)
 {
   // Rotate (64-bit) quad-words
   rotr_big(out, in, (bitscount / 64));
   // Rotate bits (less than 64)
   rotr_small(out, out, (bitscount % 64));
+}
+
+void dup_portable(IN OUT syndrome_t *s)
+{
+  _dup(s);
+}
+
+void bit_sliced_adder_portable(OUT upc_t *upc,
+                           IN OUT syndrome_t *rotated_syndrome,
+                           IN const size_t    num_of_slices)
+{
+  _bit_sliced_adder(upc, rotated_syndrome, num_of_slices);
+}
+
+void bit_slice_full_subtract_portable(OUT upc_t *upc, IN uint8_t val)
+{
+  _bit_slice_full_subtract(upc, val);
 }
