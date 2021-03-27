@@ -7,10 +7,17 @@ target_sources(${PROJECT_NAME}
   PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/aes_ctr_prf.c 
     ${CMAKE_CURRENT_LIST_DIR}/sampling.c 
-    ${CMAKE_CURRENT_LIST_DIR}/sampling${SUF}.c
+    ${CMAKE_CURRENT_LIST_DIR}/sampling_portable.c
     
     ${HEADERS}
 )
+
+if(X86_64)
+  target_sources(${PROJECT_NAME}
+          PRIVATE
+            ${CMAKE_CURRENT_LIST_DIR}/sampling_avx2.c
+            ${CMAKE_CURRENT_LIST_DIR}/sampling_avx512.c)
+endif()
 
 if(NOT DEFINED USE_OPENSSL)
   target_sources(${PROJECT_NAME}

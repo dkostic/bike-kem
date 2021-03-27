@@ -86,47 +86,6 @@ else()
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -maes -mssse3")
 endif()
 
-if(PORTABLE)
-
-  if(AVX2)
-    message(FATAL "AVX2 flag is not allowed when PORTABLE is selected")
-  endif()
-  
-  if(AVX512)
-    message(FATAL "AVX512 flag is not allowed when PORTABLE is selected")
-  endif()
-  
-  if(PCLMUL)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mpclmul -DPCLMUL")
-    set(SUFMUL _pclmul)
-  else()
-    set(SUFMUL _portable)
-  endif()
-
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DPORTABLE")
-  set(SUF _portable)
-
-else()
-
-  if(VPCLMUL)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mvpclmulqdq -DVPCLMUL")
-    set(SUFMUL _vpclmul)
-    set(AVX512 1)
-  else()
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mpclmul -DPCLMUL")
-    set(SUFMUL _pclmul)
-  endif()
-
-  if(AVX512)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx512f -mavx512bw -mavx512dq -DAVX512")
-    set(SUF _avx512)
-  else()
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mavx2 -DAVX2")
-    set(SUF _avx2)
-  endif()
-endif()
-
-
 if(USE_NIST_RAND)
   if(FIXED_SEED)
     message(FATAL "Can't set both FIXED_SEED and USE_NIST_RAND")
@@ -138,3 +97,16 @@ if(USE_NIST_RAND)
   set(LINK_OPENSSL 1)
 
 endif()
+
+# List all files with avx2 and avx512 suffix
+FILE(GLOB_RECURSE AVX2_SRCS ${PROJECT_SOURCE_DIR}/src/*_avx2.c)
+FILE(GLOB_RECURSE AVX512_SRCS ${PROJECT_SOURCE_DIR}/src/*_avx512.c)
+
+set(AVX512_FLAGS "-mavx512f;-mavx512bw;-mavx512dq")
+
+# Set appropriate flags for avx files
+set_source_files_properties(${AVX2_SRCS} PROPERTIES COMPILE_OPTIONS "-mavx2")
+set_source_files_properties(${AVX512_SRCS} PROPERTIES COMPILE_OPTIONS "${AVX512_FLAGS}")
+
+set_source_files_properties(${PROJECT_SOURCE_DIR}/src/gf2x/gf2x_mul_base_pclmul.c PROPERTIES COMPILE_OPTIONS "-mpclmul;")
+set_source_files_properties(${PROJECT_SOURCE_DIR}/src/gf2x/gf2x_mul_base_vpclmul.c PROPERTIES COMPILE_OPTIONS "-mvpclmulqdq;${AVX512_FLAGS}")

@@ -29,5 +29,4 @@ if((NOT X86_64) AND (NOT X86))
   # Non X86_64 platforms may not have AES_NI, POPCNT, and PCLMUL support
   # Thus, they depend on OpenSSL for providing AES and SHA implementations
   set(USE_OPENSSL 1)
-  set(PORTABLE 1)
 endif()

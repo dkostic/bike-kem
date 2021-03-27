@@ -7,16 +7,19 @@
 
 #include <assert.h>
 
-#include "sampling.h"
+#include "sampling_internal.h"
 
-// For improved performance, we process NUM_ZMMS amount of data in parallel.
+#define AVX2_INTERNAL
+#include "x86_64_intrinsic.h"
+
+// For improved performance, we process NUM_YMMS amount of data in parallel.
 #define NUM_YMMS    (4)
 #define YMMS_QWORDS (QWORDS_IN_YMM * NUM_YMMS)
 
-void secure_set_bits(OUT pad_r_t *   r,
-                     IN const size_t first_pos,
-                     IN const idx_t *wlist,
-                     IN const size_t w_size)
+void secure_set_bits_avx2(OUT pad_r_t *   r,
+                          IN const size_t first_pos,
+                          IN const idx_t *wlist,
+                          IN const size_t w_size)
 {
   // The function assumes that the size of r is a multiple
   // of the cumulative size of used YMM registers.

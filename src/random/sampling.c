@@ -8,6 +8,7 @@
 #include <assert.h>
 
 #include "sampling.h"
+#include "sampling_internal.h"
 
 void get_seeds(OUT seeds_t *seeds)
 {
