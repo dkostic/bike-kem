@@ -130,13 +130,12 @@ ret_t sample_indices_fisher_yates(OUT idx_t *out,
 		// Loop over (the end of) the output array to determine if l is a duplicate
         uint32_t is_dup = 0;
         for (size_t j = i + 1; j < num_indices; ++j) {
-            is_dup |= secure_cmp32(l, out[j]);
+            is_dup |= secure_cmpeq64_mask(l, out[j]);
         }
 
-		// if l is a duplicate out[i] gets i else out[i] gets l
-		// mask is all 1 if l is a duplicate, all 0 else
-        uint32_t mask = -is_dup;
-        out[i] = (mask & i) ^ (~mask & l);
+        // if l is a duplicate out[i] gets i else out[i] gets l
+        // mask is all 1 if l is a duplicate, all 0 else
+        out[i] = (is_dup & i) ^ (~is_dup & l);
     }
 
     return SUCCESS;

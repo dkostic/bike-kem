@@ -86,37 +86,45 @@ _INLINE_ uint32_t secure_cmp(IN const uint8_t *a,
   return (0 == res);
 }
 
-// Return 1 if the arguments are equal to each other. Return 0 otherwise.
-_INLINE_ uint32_t secure_cmp32(IN const uint32_t v1, IN const uint32_t v2)
+#if !(defined(__x86_64__) || defined(__i386__) || defined(__aarch64__))
+// constant_time_ functions below borrowed from AWS-LC.
+//
+// constant_time_msb returns the given value with the MSB copied to all the
+// other bits.
+static inline size_t constant_time_msb(size_t a) {
+  return 0u - (a >> (sizeof(a) * 8 - 1));
+}
+
+// constant_time_eq returns 0xff..f if a == 0, and 0 otherwise.
+static inline size_t constant_time_is_zero(size_t a) {
+  return constant_time_msb(~a&(a-1));
+}
+#endif
+
+// Return all 1s if the arguments are equal to each other. Return 0 otherwise.
+_INLINE_ uint64_t secure_cmpeq64_mask(IN const uint64_t v1, IN const uint64_t v2)
 {
 #if defined(__aarch64__)
-  uint32_t res;
-  __asm__ __volatile__("cmp  %w[V1], %w[V2]; \n "
-                       "cset %w[RES], EQ; \n"
-                       : [RES] "=r"(res)
-                       : [V1] "r"(v1), [V2] "r"(v2)
-                       : "cc" /*The condition code flag*/);
+  uint64_t res;
+    __asm__ __volatile__("cmp   %1, %2\n"
+                         "csetm %0, eq\n"
+                         : "=r"(res)
+                         : "r"(v1), "r"(v2)
+                         : "cc"); // condition codes clobbered
   return res;
 #elif defined(__x86_64__) || defined(__i386__)
-  uint32_t res;
+  uint64_t res;
   __asm__ __volatile__("xor  %%edx, %%edx; \n"
                        "cmp  %1, %2; \n "
                        "sete %%dl; \n"
+                       "neg %%rdx; \n"
                        "mov %%edx, %0; \n"
                        : "=r"(res)
                        : "r"(v1), "r"(v2)
                        : "rdx");
   return res;
 #else
-  // Insecure comparison: The main purpose of secure_cmp32 is to avoid
-  // branches to prevent potential side channel leaks. To do that,
-  // we normally leverage some special CPU instructions such as "sete"
-  // (for __x86_64__) and "cset" (for __aarch64__). When dealing with general
-  // CPU architectures, the interpretation of the line below is left for the
-  // compiler. It could lead to an "insecure" branch. This case needs to be
-  // checked individually on such platforms
-  // (e.g., by checking the compiler-generated assembly).
-  return (v1 == v2 ? 1 : 0);
+  return constant_time_is_zero(v1 ^ v2);
 #endif
 }
 
@@ -184,11 +192,6 @@ _INLINE_ uint32_t secure_l32_mask(IN const uint32_t v1, IN const uint32_t v2)
   // 32 bits gives 0 if v1 < v2 and otherwise (-1).
   return ~((uint32_t)(((uint64_t)v1 - (uint64_t)v2) >> 32));
 #endif
-}
-
-// Return (-1) if v1 == v2, 0 otherwise
-_INLINE_ uint64_t secure_cmpeq64_mask(IN const uint64_t v1, IN const uint64_t v2) {
-    return -(1 - ((uint64_t)((v1-v2) | (v2-v1)) >> 63));
 }
 
 // bike_memcpy avoids the undefined behaviour of memcpy when byte_len=0

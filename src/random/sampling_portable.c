@@ -41,7 +41,7 @@ void secure_set_bits_port(OUT pad_r_t *   r,
   for(size_t i = 0; i < (sizeof(*r) / sizeof(uint64_t)); i++) {
     val = 0;
     for(size_t j = 0; j < w_size; j++) {
-      mask = (-1ULL) + (!secure_cmp32(pos_qw[j], i));
+      mask = secure_cmpeq64_mask(pos_qw[j], i);
       val |= (pos_bit[j] & mask);
     }
     a64[i] = val;
@@ -74,12 +74,10 @@ ret_t sample_error_vec_indices_port(OUT idx_t *out,
     // and store it in the lcoation pointed to by |ctr|.
     uint32_t is_dup = 0;
     for (size_t j = 0; j < T; j++) {
-      is_dup |= secure_cmp32(idx, out[j]);
+      is_dup |= secure_cmpeq64_mask(idx, out[j]);
 
-      // Set |mask| to 0 if |ctr| != |j|, to all ones otherwise.
-      uint32_t mask = -secure_cmp32(j, ctr);
       // Write |idx| to out if |ctr| == |j|.
-      out[j] = (~mask & out[j]) | (mask & idx);
+      out[j] = (mask & out[j]) | (~mask & idx);
     }
 
     // Check if |idx| is a valid index (< N) and increase the counter
